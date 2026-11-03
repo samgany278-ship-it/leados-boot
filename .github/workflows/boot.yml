@@ -12,7 +12,7 @@ jobs:
           GH_TOKEN: ${{ secrets.SHIPIT_TOKEN }}
         run: |
           set -e
-          CS=$(gh codespace list -R EZZ1000000000/LeadOS --json name --jq ".[0].name" || true)
+          CS=$(cd /tmp && gh codespace list --json name --jq ".[0].name" || true)
           echo "Codespace: $CS"
           test -n "$CS"
           gh codespace ssh -c "$CS" -- 'echo CONNECTED && hostname && git -C /workspaces/LeadOS pull origin deploy/codespace || true'
