@@ -2,10 +2,6 @@ name: boot-leados-codespace
 on:
   workflow_dispatch:
 
-permissions:
-  codespaces: write
-  contents: read
-
 jobs:
   boot:
     runs-on: ubuntu-latest
@@ -13,7 +9,7 @@ jobs:
     steps:
       - name: Connect and run LeadOS setup inside codespace
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SHIPIT_TOKEN }}
         run: |
           set -e
           CS=$(gh codespace list --json name,repository --jq '.[] | select(.repository=="EZZ1000000000/LeadOS") | .name' | head -1)
