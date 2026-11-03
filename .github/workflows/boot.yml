@@ -1,0 +1,28 @@
+name: boot-leados-codespace
+on:
+  workflow_dispatch:
+
+permissions:
+  codespaces: write
+  contents: read
+
+jobs:
+  boot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Connect and run LeadOS setup inside codespace
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          CS=$(gh codespace list --json name,repository --jq '.[] | select(.repository=="EZZ1000000000/LeadOS") | .name' | head -1)
+          echo "Codespace: $CS"
+          test -n "$CS"
+          gh codespace ssh -c "$CS" -- 'echo CONNECTED && hostname && git -C /workspaces/LeadOS pull origin deploy/codespace || true'
+          git clone --depth 1 -b deploy/codespace https://github.com/EZZ1000000000/LeadOS /tmp/leados
+          gh codespace ssh -c "$CS" -- bash -s < /tmp/leados/scripts/codespace-setup.sh
+          echo "=== health check:"
+          gh codespace ssh -c "$CS" -- 'curl -s -o /dev/null -w "HTTP %{http_code}\n" --max-time 5 http://localhost:3000/ || true'
+          gh api -X PUT "user/codespaces/$CS/ports/3000" -f visibility=open
+          gh api "user/codespaces/$CS/ports" --jq '.ports[] | {port, visibility, url}'
