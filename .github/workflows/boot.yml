@@ -20,5 +20,11 @@ jobs:
           gh codespace ssh -c "$CS" -- bash -s < /tmp/leados/scripts/codespace-setup.sh
           echo "=== health check:"
           gh codespace ssh -c "$CS" -- 'curl -s -o /dev/null -w "HTTP %{http_code}\n" --max-time 5 http://localhost:3000/ || true'
-          gh api -X PUT "user/codespaces/$CS/ports/3000" -f visibility=open
-          gh api "user/codespaces/$CS/ports" --jq '.ports[] | {port, visibility, url}'
+          echo "=== force port detection:"
+          (gh codespace forward-ports -c "$CS" > /tmp/fp.log 2>&1 &)
+          sleep 30
+          gh api "user/codespaces/$CS/ports" --jq '.ports' || true
+          echo "=== open port 3000:"
+          gh api -X PUT "user/codespaces/$CS/ports/3000" -f visibility=open || true
+          gh api "user/codespaces/$CS/ports" --jq '.ports[] | {port, visibility, url}' || true
+          echo BOOT_STEP_DONE
